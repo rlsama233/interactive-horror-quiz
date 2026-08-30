@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>日常生活小知识调查问卷</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:"Microsoft Yahei",sans-serif;}
+body{background:#f7fbff;color:#222;transition:0.3s;}
+body.dark-mode{background:#111111;color:#eeeeee;}
+.container{max-width:700px;margin:70px auto;padding:30px;}
+.title{font-size:24px;text-align:center;margin-bottom:20px;font-weight:normal;}
+.progress{font-size:15px;color:#557799;text-align:center;margin-bottom:30px;}
+body.dark-mode .progress{color:#aaaaaa;}
+.question{font-size:18px;margin:30px 0;min-height:70px;line-height:1.7;}
+.question .first-word-red{color:#ff4444;}
+.opt{display:block;width:100%;padding:15px;margin:10px 0;border:1px solid #cce0f5;background:#ffffff;text-align:left;font-size:16px;cursor:pointer;transition:0.35s;}
+.opt:hover{background:#ecf4fc;border-color:#82b8e8;}
+.opt-wrong{background:#e9e9e9 !important;color:#888 !important;border-color:#d0d0d0 !important;cursor:not-allowed;}
+
+body.dark-mode .opt{background:#222222;border:#444444;color:#eee;}
+body.dark-mode .opt:hover{background:#333333;border:#666666;}
+
+.tip{color:#6688aa;font-size:14px;text-align:center;margin-top:20px;}
+body.dark-mode .tip{color:#bbbbbb;}
+.end-text{margin-top:50px;font-size:17px;line-height:2.1;text-align:center;display:none;}
+
+/* 过渡遮罩 */
+.flash-overlay{position:fixed;inset:0;background:#000;color:#ff3333;display:flex;align-items:center;justify-content:center;font-size:18px;z-index:9999;}
+.flash-overlay.hidden{display:none;}
+.mask-normal{position:fixed;inset:0;background:#f7fbff;color:#222;display:flex;align-items:center;justify-content:center;font-size:18px;z-index:9998;}
+.mask-normal.hidden{display:none;}
+
+/*填空题样式*/
+.fill-wrap{display:none;margin-top:30px;}
+.fill-input{width:100%;padding:12px;font-size:16px;margin:12px 0;}
+.btn-normal{padding:10px 18px;font-size:15px;cursor:pointer;margin:6px;}
+.btn-red{padding:12px 24px;font-size:20px;color:#ff2222;background:transparent;border:2px solid #ff2222;cursor:pointer;opacity:0;transition:opacity 2.5s;}
+@keyframes runShake{0%{transform:translateX(-3px)}100%{transform:translateX(3px)}}
+.btn-red.shake{animation: runShake 0.18s infinite alternate;}
+.hint-small{font-size:14px;color:#666;margin-top:8px;}
+body.dark-mode .hint-small{color:#bbbbbb;}
+
+/*直接答对结局弹窗*/
+.direct-ending{display:none;margin-top:40px;line-height:2.2;text-align:center;}
+.red-text{color:#ff3333;}
+
+/* 抖动闪烁动画集合 */
+@keyframes shakeA { 0%{transform:translateX(-3px)} 100%{transform:translateX(3px)} }
+@keyframes shakeB { 0%{transform:translateY(-2px)} 100%{transform:translateY(2px)} }
+@keyframes blinkFast { 0%,100%{opacity:1} 50%{opacity:0.2} }
+@keyframes blinkSlow { 0%,100%{opacity:1} 50%{opacity:0.6} }
+@keyframes flicker { 0%{opacity:1} 20%{opacity:0.3} 40%{opacity:1} 60%{opacity:0.5} 80%{opacity:0.9} 100%{opacity:1} }
+.anim-shake-a{animation: shakeA 0.25s infinite alternate;}
+.anim-shake-b{animation: shakeB 0.35s infinite alternate;}
+.anim-blink-fast{animation: blinkFast 0.4s infinite;}
+.anim-blink-slow{animation: blinkSlow 0.8s infinite;}
+.anim-flicker{animation: flicker 1.2s infinite;}
+
+/*超时泛红遮罩*/
+.timeout-red{position:fixed;inset:0;pointer-events:none;z-index:9990;
+background:radial-gradient(circle at center, transparent 30%, rgba(120,0,0,0.6) 100%);
+opacity:0;transition:opacity 1.2s;
+}
+.timeout-red.active{opacity:1;}
+
+/*第7题咚咚咚全屏*/
+.event-flash-dong{position:fixed;inset:0;background:#990000;z-index:9997;display:none;overflow:hidden;}
+.event-flash-dong.show{display:block;}
+.event-flash-dong .dong-text{color:#ff2222;font-size:18px;font-weight:bold;animation:blinkFast 0.15s infinite;
+width:100%;height:100%;display:grid;grid-template-columns:repeat(10,1fr);grid-template-rows:repeat(15,1fr);
+}
+
+/*第9题眼睛emoji弹窗*/
+.event-eye-pop{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9997;display:none;align-items:center;justify-content:center;font-size:80px;}
+.event-eye-pop.show{display:flex;}
+
+/*开场开始页*/
+.start-page{display:none;text-align:center;margin-top:120px;}
+.quiz-page{display:none;}
+
+/*制作信息弹窗 白底黑字，无emoji，含免责声明*/
+.splash-info{position:fixed;inset:0;background:#ffffff;color:#000000;z-index:99999;display:flex;align-items:center;justify-content:center;}
+.splash-box{text-align:center;padding:40px;max-width:500px;}
+
+/*恐怖结局页面 黑底 */
+.horror-ending{display:none;position:fixed;inset:0;background:#000;color:#eeeeee;z-index:9996;padding:40px;}
+.horror-text{font-size:18px;line-height:2.4;max-width:600px;margin:120px auto 0;text-align:center;}
+/*真正结局页面：全屏白底黑字*/
+.true-ending{display:none;position:fixed;inset:0;background:#ffffff;color:#000000;z-index:9995;
+text-align:center;padding-top:80px;line-height:2.3;overflow:auto;}
+</style>
+</head>
+<body>
+<!--最开头制作信息弹窗 白底黑字，无emoji，含免责声明-->
+<div class="splash-info" id="splashInfo">
+  <div class="splash-box">
+    <div style="font-size:18px;line-height:2">
+      该链接由日落SaMa制作<br>
+      dy号：rlSaMa2333<br>
+      <span style="font-size:15px;color:#444;">本作品含有恐怖向元素，心理承受能力较差、心脏状况不佳者请谨慎游玩。本内容仅供娱乐，请勿当真。</span>
+    </div>
+    <br>
+    <button class="btn-normal" id="btnSplashOk">确定</button>
+  </div>
+</div>
+
+<div class="start-page" id="startPage">
+  <h2>日常生活小知识调查问卷</h2>
+  <div style="margin:30px auto;max-width:550px;font-size:17px;line-height:1.8;">
+    生活中藏着许许多多有趣的小知识<br>
+    快来测一测你对生活常识的了解程度叭~
+  </div>
+  <button class="btn-normal" id="btnStart">开始测试</button>
+</div>
+
+<div class="quiz-page" id="quizPage">
+  <div class="mask-normal hidden" id="maskNormal">问卷已结束</div>
+  <div class="flash-overlay hidden" id="flashMask">问卷还没结束，请继续作答</div>
+  <div class="timeout-red" id="timeoutRedMask"></div>
+  <div class="event-flash-dong" id="eventDongMask">
+    <div class="dong-text">
+      咚咚咚咚咚咚咚咚咚咚
+      咚咚咚咚咚咚咚咚咚咚
+      咚咚咚咚咚咚咚咚咚咚
+      咚咚咚咚咚咚咚咚咚咚
+      咚咚咚咚咚咚咚咚咚咚
+      咚咚咚咚咚咚咚咚咚咚
+      咚咚咚咚咚咚咚咚咚咚
+      咚咚咚咚咚咚咚咚咚咚
+      咚咚咚咚咚咚咚咚咚咚
+      咚咚咚咚咚咚咚咚咚咚
+      咚咚咚咚咚咚咚咚咚咚
+      咚咚咚咚咚咚咚咚咚咚
+      咚咚咚咚咚咚咚咚咚咚
+      咚咚咚咚咚咚咚咚咚咚
+      咚咚咚咚咚咚咚咚咚咚
+    </div>
+  </div>
+  <div class="event-eye-pop" id="eventEyeMask">👁️ 👁️</div>
+
+  <div class="container">
+    <h2 class="title">日常生活小知识调查问卷</h2>
+    <div class="progress" id="progressText"></div>
+    <div class="question" id="q">题目加载中……</div>
+    <div id="opts"></div>
+    <div class="tip" id="tip">请选出正确答案</div>
+
+    <div class="fill-wrap" id="fillBlock">
+      <div id="fillIntro"></div>
+      <input class="fill-input" id="answerInput" placeholder="请输入答案">
+      <div>
+        <button class="btn-normal" id="submitFill">提交答案</button>
+        <button class="btn-normal" id="goBackReview">回去看看</button>
+      </div>
+      <div class="hint-small" id="reviewHint">是不是忘记啦，点这个按钮可以回去看哦</div>
+    </div>
+
+    <div class="direct-ending" id="directEnd">
+      <div>٩(๑>▽<๑)۶恭喜你答完了，你真是个日常生活小能手</div>
+      <div class="red-text" style="margin-top:10px">不过……你是不是答的太快了，好像漏掉了什么东西。</div>
+      <button class="btn-normal" id="resetToFill">重新作答</button>
+    </div>
+
+    <div class="end-text" id="end"></div>
+  </div>
+</div>
+
+<!--恐怖结局界面-->
+<div class="horror-ending" id="horrorEnd">
+  <div class="horror-text" id="horrorText"></div>
+  <div style="text-align:center;margin-top:40px;">
+    <button class="btn-red" id="btnRun">快跑</button>
+  </div>
+</div>
+
+<!--真正结局界面 全屏白底黑字，保留颜文字-->
+<div class="true-ending" id="trueEnd">
+  <h2>恭喜你跑路成功了！ヽ(´▽｀)ノ</h2>
+  <div style="margin:24px auto;max-width:550px;font-size:17px;">
+    感谢游玩本次小问卷~<br>
+    这些东西全部都是假的，房间里没有别人。(•̀ω•́)✧<br>
+    不要自己吓自己，安心就好。
+  </div>
+  <button class="btn-normal" id="btnRestart">再玩一次</button>
+</div>
+
+<script>
+const normalQuestions = [
+  {
+    q:"日常喝开水，最合适的饮水温度大约是？",
+    o:["A. 60‑70℃","B. 20‑35℃","C. 85‑95℃"],
+    answer:1
+  },
+  {
+    q:"开窗通风，居家建议每次至少通风多久？",
+    o:["A. 5分钟","B. 30分钟","C. 10‑15分钟"],
+    answer:2
+  },
+  {
+    q:"下面哪一种食物不适合放进冰箱冷冻层？",
+    o:["A.香蕉","B.猪肉","C.面包"],
+    answer:0
+  },
+  {
+    q:"夜晚看书，桌面台灯灯光最好？",
+    o:["A.直接照射眼睛","B.照亮书本，避开眼睛","C.关掉房间主灯只开台灯"],
+    answer:1
+  },
+  {
+    q:"闻到家中轻微烧焦气味，第一步应该？",
+    o:["A.到处翻找源头","B.先切断对应电源","C.打开柜子查看"],
+    answer:1
+  }
+];
+
+//6‑11题，idx映射：0=6题，1=7题，2=8题，3=9题，4=10题，5=11题
+const horrorQuestions = [
+  {
+    q:"有什么物品最容易在夜晚的家中被看错成别的东西？",
+    o:["A.挂在衣架上的外套","B.摆放整齐的抱枕","C.桌面摆放的水杯"],
+    oDark:["A.那不是外套","B.它正在看着你","C.不要看向桌面"],
+    anim:"anim-shake-a"
+  },
+  {
+    q:"“人”在深夜独处房间时，哪种听觉错觉最为常见？",
+    o:["A.听见脚步声","B.窗外车辆噪音","C.冰箱压缩机运行声"],
+    oDark:["A.脚步声就在你的身后","B.外面什么都没有","C.声音来自墙里面"],
+    anim:"anim-blink-fast"
+  },
+  {
+    q:"在密闭的房间待久了，你会偶尔产生哪种奇怪感受？",
+    o:["A.感觉身后站着什么","B.觉得房间温度升高","C.感到很困倦想睡觉"],
+    oDark:["A.它就站在你的身后","B.温度正在慢慢下降","C.不要睡着"],
+    anim:"anim-flicker"
+  },
+  {
+    q:"房内的阴影，在光线昏暗的时候，会带给你怎样的联想？",
+    o:["A.只是普通阴影而已","B.好像藏着什么轮廓","C.完全不会在意阴影"],
+    oDark:["A.阴影会动","B.轮廓正在慢慢靠近","C.它就在阴影里面"],
+    anim:"anim-shake-b"
+  },
+  {
+    q:"间接地听到房间传来细碎响动，你的第一反应会是？",
+    o:["A.检查门窗家具","B.当作错觉忽略掉","C.不敢回头去确认"],
+    oDark:["A.不要去检查","B.错觉是骗你的","C.千万不要回头"],
+    anim:"anim-blink-slow"
+  },
+  {
+    q:"里侧墙角的黑暗，你敢长时间盯着它看吗？",
+    o:["A.可以坦然注视","B.尽量避开不去看","C.会忍不住怀疑里面有东西"],
+    oDark:["A.不要盯着看太久","B.它会注意到你","C.你的怀疑是对的"],
+    anim:"anim-shake-a"
+  }
+];
+
+let stage = 0; //0前5普通，1正常6‑11，2回看恐怖模式，3填空题，4直接答对结局
+let idx = 0;
+let timeoutTimer = null;
+const TIMEOUT_DELAY = 4000;
+
+/* ===== 温馨柔和电子BGM（Web Audio 合成，无外部mp3） ===== */
+let bgmCtx = null;
+let bgmMaster = null;
+let bgmTimer = null;
+let bgmStep = 0;
+// 温馨琶音：C大调上行下行循环（C4 E4 G4 B4 C5 B4 G4 E4）
+const bgmNotes = [261.63, 329.63, 392.00, 493.88, 523.25, 493.88, 392.00, 329.63];
+const bgmInterval = 500; // 每0.5秒一个音，节奏舒缓
+
+function bgmInit(){
+  if(bgmCtx) return;
+  bgmCtx = new (window.AudioContext||window.webkitAudioContext)();
+  bgmMaster = bgmCtx.createGain();
+  bgmMaster.gain.value = 0.15; // 音量15%
+  bgmMaster.connect(bgmCtx.destination);
+}
+
+function playBgmNote(){
+  if(!bgmCtx) return;
+  const freq = bgmNotes[bgmStep % bgmNotes.length];
+  bgmStep++;
+  const now = bgmCtx.currentTime;
+  // 主音：柔和sine，快速起音缓衰减，像八音盒
+  const osc = bgmCtx.createOscillator();
+  const g = bgmCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = freq;
+  g.gain.setValueAtTime(0.0001, now);
+  g.gain.exponentialRampToValueAtTime(0.6, now+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, now+0.6);
+  osc.connect(g);
+  g.connect(bgmMaster);
+  osc.start(now);
+  osc.stop(now+0.7);
+  // 高八度泛音，增加明亮温馨感，音量更轻
+  const osc2 = bgmCtx.createOscillator();
+  const g2 = bgmCtx.createGain();
+  osc2.type = 'sine';
+  osc2.frequency.value = freq*2;
+  g2.gain.setValueAtTime(0.0001, now);
+  g2.gain.exponentialRampToValueAtTime(0.2, now+0.02);
+  g2.gain.exponentialRampToValueAtTime(0.0001, now+0.5);
+  osc2.connect(g2);
+  g2.connect(bgmMaster);
+  osc2.start(now);
+  osc2.stop(now+0.6);
+}
+
+function bgmPlay(){
+  bgmInit();
+  if(bgmCtx.state === 'suspended') bgmCtx.resume();
+  if(bgmTimer) return;
+  bgmStep = 0;
+  bgmTimer = setInterval(playBgmNote, bgmInterval);
+  playBgmNote();
+}
+
+function bgmPause(){
+  if(bgmCtx && bgmCtx.state === 'running'){
+    bgmCtx.suspend();
+  }
+}
+
+function bgmResume(){
+  if(!bgmCtx) return;
+  if(bgmCtx.state === 'suspended') bgmCtx.resume();
+}
+
+function bgmStop(){
+  if(bgmTimer){ clearInterval(bgmTimer); bgmTimer = null; }
+  if(bgmCtx){ bgmCtx.close(); bgmCtx = null; bgmMaster = null; }
+}
+
+const splashInfo = document.getElementById("splashInfo");
+const btnSplashOk = document.getElementById("btnSplashOk");
+
+const startPage = document.getElementById("startPage");
+const quizPage = document.getElementById("quizPage");
+const btnStart = document.getElementById("btnStart");
+
+const qDom = document.getElementById("q");
+const oDom = document.getElementById("opts");
+const tDom = document.getElementById("tip");
+const progressDom = document.getElementById("progressText");
+const flashMask = document.getElementById("flashMask");
+const maskNormal = document.getElementById("maskNormal");
+const fillBlock = document.getElementById("fillBlock");
+const fillIntro = document.getElementById("fillIntro");
+const answerInput = document.getElementById("answerInput");
+const submitFill = document.getElementById("submitFill");
+const goBackReview = document.getElementById("goBackReview");
+const reviewHint = document.getElementById("reviewHint");
+const directEnd = document.getElementById("directEnd");
+const resetToFill = document.getElementById("resetToFill");
+const timeoutRedMask = document.getElementById("timeoutRedMask");
+const eventDongMask = document.getElementById("eventDongMask");
+const eventEyeMask = document.getElementById("eventEyeMask");
+
+const horrorEnd = document.getElementById("horrorEnd");
+const horrorText = document.getElementById("horrorText");
+const btnRun = document.getElementById("btnRun");
+const trueEnd = document.getElementById("trueEnd");
+const btnRestart = document.getElementById("btnRestart");
+
+//重置全部状态，回到开场页
+function fullReset(){
+  stage = 0;
+  idx = 0;
+  clearTimeoutEffect();
+  document.body.classList.remove("dark-mode");
+  splashInfo.style.display="flex";
+  startPage.style.display="none";
+  quizPage.style.display="none";
+  horrorEnd.style.display="none";
+  trueEnd.style.display="none";
+  directEnd.style.display="none";
+  fillBlock.style.display="none";
+  btnRun.classList.remove("shake");
+  bgmStop();
+}
+
+//清除超时计时器和泛红
+function clearTimeoutEffect(){
+  if(timeoutTimer) clearTimeout(timeoutTimer);
+  timeoutTimer = null;
+  timeoutRedMask.classList.remove("active");
+}
+
+//启动超时计时：黑底回看模式4秒不操作泛红
+function startQuestionTimeout(){
+  clearTimeoutEffect();
+  if(stage !== 2) return;
+  timeoutTimer = setTimeout(()=>{
+    timeoutRedMask.classList.add("active");
+  },TIMEOUT_DELAY);
+}
+
+//制作信息确定按钮：点击后开始播放温馨BGM
+btnSplashOk.onclick = function(){
+  splashInfo.style.display="none";
+  startPage.style.display="block";
+  bgmPlay();
+};
+
+//开场开始按钮
+btnStart.onclick = function(){
+  startPage.style.display="none";
+  quizPage.style.display="block";
+  render();
+};
+
+//提交填空题
+submitFill.onclick = function(){
+  const inputVal = answerInput.value.trim();
+  if(inputVal === "有人在房间里"){
+    if(document.body.classList.contains("dark-mode")){
+      showHorrorEnding();
+    }else{
+      stage = 4;
+      fillBlock.style.display="none";
+      directEnd.style.display="block";
+      qDom.style.display="none";
+      progressDom.style.display="none";
+      tDom.style.display="none";
+    }
+  }else{
+    alert("答案不对，再想想");
+  }
+}
+
+//恐怖结局输出文字，精简为三句，居中
+async function showHorrorEnding(){
+  quizPage.style.display="none";
+  horrorEnd.style.display="block";
+  const runBtn = document.getElementById("btnRun");
+  runBtn.style.opacity = 0;
+  runBtn.classList.remove("shake");
+  horrorText.innerText = "";
+  const textPool = [
+    "哦，有“人”在房间里啊。",
+    "",
+    "你终于发现了。",
+    "",
+    "它已经注意到你了。"
+  ];
+  for(let s of textPool){
+    horrorText.innerText += s+"\n";
+    await new Promise(r=>setTimeout(r,700));
+  }
+  runBtn.style.opacity = 1;
+  runBtn.classList.add("shake");
+}
+
+//快跑按钮，跳真正结局
+btnRun.onclick = function(){
+  horrorEnd.style.display="none";
+  trueEnd.style.display="block";
+};
+
+//再玩一次
+btnRestart.onclick = fullReset;
+
+//重新作答按钮，回到白底填空题
+resetToFill.onclick = function(){
+  stage = 3;
+  document.body.classList.remove("dark-mode");
+  directEnd.style.display="none";
+  enterFillStage(false);
+}
+
+//回去看看按钮：点击后BGM彻底停止，进入黑暗异变
+goBackReview.onclick = function(){
+  bgmStop();
+  stage = 2;
+  idx = 0;
+  document.body.classList.add("dark-mode");
+  fillBlock.style.display="none";
+  render();
+}
+
+//回看模式：完整取题目第一个字符单元（包含“人”的双引号）变红
+function renderRedFirstWord(text){
+  if(text.startsWith("“人”")){
+    return `<span class="first-word-red">“人”</span>${text.slice(4)}`;
+  }else{
+    return `<span class="first-word-red">${text.charAt(0)}</span>${text.slice(1)}`;
+  }
+}
+
+//第7题事件：全屏密集咚咚咚闪1秒
+async function triggerEventDong(){
+  return new Promise(resolve=>{
+    eventDongMask.classList.add("show");
+    setTimeout(()=>{
+      eventDongMask.classList.remove("show");
+      resolve();
+    },1000);
+  });
+}
+
+//第9题事件：👁️👁️emoji闪现
+async function triggerEventEye(){
+  return new Promise(resolve=>{
+    eventEyeMask.classList.add("show");
+    setTimeout(()=>{
+      eventEyeMask.classList.remove("show");
+      resolve();
+    },700);
+  });
+}
+
+async function render(){
+  clearTimeoutEffect();
+  oDom.innerHTML = "";
+  fillBlock.style.display="none";
+  directEnd.style.display="none";
+  tDom.style.display="block";
+  qDom.style.display="block";
+  progressDom.style.display="block";
+  qDom.className = "question";
+
+  if(stage===0){
+    progressDom.innerText = `${idx+1} / 5`;
+    if(idx >= normalQuestions.length){
+      //第5题完成，先暂停BGM（问卷已结束遮罩阶段保持静音）
+      bgmPause();
+      maskNormal.classList.remove("hidden");
+      setTimeout(()=>{
+        maskNormal.classList.add("hidden");
+        flashMask.classList.remove("hidden");
+        setTimeout(()=>{
+          flashMask.classList.add("hidden");
+          stage = 1;
+          idx = 0;
+          tDom.innerText = "请选择你认为合理的选项";
+          render();
+        },800);
+      },700);
+      return;
+    }
+    let cur = normalQuestions[idx];
+    qDom.innerText = cur.q;
+    cur.o.forEach((text,i)=>{
+      let btn = document.createElement("button");
+      btn.className = "opt";
+      btn.innerText = text;
+      btn.onclick = ()=>{
+        if(i !== cur.answer){
+          btn.classList.add("opt-wrong");
+          btn.innerText = "不是这个哦";
+          btn.disabled = true;
+        }else{
+          idx++;
+          setTimeout(render,600);
+        }
+      }
+      oDom.appendChild(btn);
+    })
+  }else if(stage === 1){
+    //正式进入第6‑11题：恢复温馨BGM
+    bgmResume();
+    document.body.classList.remove("dark-mode");
+    progressDom.innerText = `${5 + idx +1} / 11`;
+    if(idx >= horrorQuestions.length){
+      enterFillStage(false);
+      return;
+    }
+    let cur = horrorQuestions[idx];
+    qDom.innerText = cur.q;
+    cur.o.forEach((text)=>{
+      let btn = document.createElement("button");
+      btn.className = "opt";
+      btn.innerText = text;
+      btn.onclick = ()=>{
+        idx++;
+        setTimeout(render,750);
+      }
+      oDom.appendChild(btn);
+    })
+  }else if(stage === 2){
+    progressDom.innerText = `${5 + idx +1} / 11`;
+    if(idx >= horrorQuestions.length){
+      enterFillStage(true);
+      return;
+    }
+    let cur = horrorQuestions[idx];
+    qDom.innerHTML = renderRedFirstWord(cur.q);
+    qDom.classList.add(cur.anim);
+    startQuestionTimeout();
+
+    cur.oDark.forEach((text)=>{
+      let btn = document.createElement("button");
+      btn.className = "opt";
+      btn.innerText = text;
+      btn.onclick = async ()=>{
+        clearTimeoutEffect();
+        if(idx === 1){
+          await triggerEventDong();
+        }
+        if(idx === 3){
+          await triggerEventEye();
+        }
+        idx++;
+        render();
+      }
+      oDom.appendChild(btn);
+    })
+  }else if(stage ===3){
+    enterFillStage(document.body.classList.contains("dark-mode"));
+  }
+}
+
+function enterFillStage(isDark){
+  clearTimeoutEffect();
+  stage = 3;
+  qDom.style.display="none";
+  oDom.innerHTML="";
+  tDom.style.display="none";
+  progressDom.style.display="none";
+  fillBlock.style.display="block";
+
+  if(isDark){
+    fillIntro.innerHTML = `<div style="font-size:17px;line-height:2">6~11题开头的第一个字分别是什么（标点符号不用输入）</div>`;
+    reviewHint.style.display = "none";
+  }else{
+    fillIntro.innerHTML = `<div style="font-size:17px;line-height:2">٩(๑•̀ω•́๑)۶恭喜你呀。选择的部分已经全部答完，接下来是最后一道填空题</div>
+    <div style="margin-top:12px">6~11题开头的第一个字分别是什么（标点符号不用输入）</div>`;
+    reviewHint.style.display = "block";
+  }
+  answerInput.value = "";
+}
+
+fullReset();
+</script>
+</body>
+</html>
